@@ -1,0 +1,5 @@
+/.svn
+/logs/*
+/target/*
+!.gitignore
+/output.xlsx
