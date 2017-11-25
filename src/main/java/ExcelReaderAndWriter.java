@@ -6,6 +6,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -259,9 +261,27 @@ public class ExcelReaderAndWriter {
 			int index = (int) indexCell.getNumericCellValue();
 			BigDecimal amount = new BigDecimal(amountCell.getNumericCellValue());
 			logger.info("amount:" + amount.doubleValue()+"");
-			Date beginTime = beginTimeCell.getDateCellValue();
+			Date beginTime = null;
+			if(beginTimeCell.getCellTypeEnum() == CellType.NUMERIC) {
+				beginTime = beginTimeCell.getDateCellValue();
+			} else if(beginTimeCell.getCellTypeEnum() == CellType.STRING) {
+				try {
+					beginTime = new SimpleDateFormat("yyyy/MM/dd").parse(beginTimeCell.getStringCellValue());
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}
+			}
 			logger.info("beginDate:" + DateUtils.getDateString(beginTime));
-			Date endTime = endTimeCell.getDateCellValue();
+			Date endTime = null;
+			if(endTimeCell.getCellTypeEnum() == CellType.NUMERIC) {
+				endTime = endTimeCell.getDateCellValue();
+			} else if(endTimeCell.getCellTypeEnum() == CellType.STRING) {
+				try {
+					endTime = new SimpleDateFormat("yyyy/MM/dd").parse(endTimeCell.getStringCellValue());
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}
+			}
 			logger.info("endTime:" + DateUtils.getDateString(endTime));
 			LaoHuanheExcelBean bean = new LaoHuanheExcelBean();
 			bean.setAmount(amount);
