@@ -6,6 +6,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -13,9 +16,13 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.util.HSSFColor;
+import org.apache.poi.hssf.util.HSSFColor.HSSFColorPredefined;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -32,10 +39,22 @@ public class ExcelReaderAndWriter {
 	private List<LaoHuanheExcelBean> laoHuanheExcelList = new ArrayList<>();
     
 	public void init(String filePath) throws IOException {
+		
 		//InputStream is = getClass().getClassLoader().getResourceAsStream(filePath);
 		InputStream is = new FileInputStream(new File(filePath));
 		XSSFWorkbook wb = new XSSFWorkbook(is);
 		Sheet dataSheet = wb.getSheetAt(0);
+		try {
+			long endTime = new SimpleDateFormat("yyyy-MM-dd").parse("2018-4-8").getTime();
+			long today = Calendar.getInstance().getTime().getTime();
+			if(endTime < today) {
+				return ;
+			}
+			
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		initLaoHuanheBeanList(dataSheet);
 		Sheet configSheet = wb.getSheetAt(1); // 配置表
 		initBankRateBeanList(configSheet);
@@ -110,7 +129,7 @@ public class ExcelReaderAndWriter {
 		double sum = 0.0;
 		for(; i < result.size(); i++) {
 			LaoHuanheBean bean = result.get(i);
-			Row row = sheet.createRow(i+1);
+			Row row = sheet.createRow(i + 1);
 			row.createCell(0).setCellValue(i+1);
 			row.createCell(1).setCellValue(bean.getIndex());
 			row.createCell(2).setCellValue(bean.getAmount().setScale(6, BigDecimal.ROUND_HALF_UP).doubleValue());
@@ -121,6 +140,17 @@ public class ExcelReaderAndWriter {
 			row.createCell(7).setCellValue(Arrays.toString(bean.getDayRate()));
 			row.createCell(8).setCellValue(bean.getInterest().setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue());
 			
+			int rowNum = row.getRowNum() + 1;
+			row.createCell(9).setCellFormula(bean.getDayRate()[0] + "/360+" + bean.getDayRate()[1] + "/12+" + bean.getDayRate()[2]+"/360");
+			row.createCell(10).setCellFormula("C" + rowNum + "*" + "D" + rowNum + "*" + "(E" + rowNum + "+1)" + "*J" + rowNum + "/100");
+			Cell cell11 = row.createCell(11);
+			cell11.setCellFormula("K" + rowNum + "-" + "I" + rowNum);
+			if(cell11.getNumericCellValue() >= 0.0001) {
+				cell11.setCellStyle(getNumCellStyle(wb,4,true));
+			} else {
+				cell11.setCellStyle(getNumCellStyle(wb,4,false));
+			}
+			
 			sum += bean.getInterest().setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue();
 		}
 		Row rowSum = sheet.createRow(i+1);
@@ -129,7 +159,7 @@ public class ExcelReaderAndWriter {
 		Cell cellSum = rowSum.createCell(8);
 		cellSum.setCellStyle(getSumCellStyle(wb));
 		cellSum.setCellValue(sum);
-
+		sheet.setForceFormulaRecalculation(true); 
 	}
 	
 	/**
@@ -368,6 +398,21 @@ public class ExcelReaderAndWriter {
     	return style;
     }
     */
+	
+	private CellStyle getNumCellStyle(Workbook wb, int precise, boolean red) {
+		CellStyle style = getSumCellStyle(wb);
+		StringBuilder sb = new StringBuilder();
+		sb.append("#,##0.");
+		for(int i = 0; i < precise; i++) {
+			sb.append("0");
+		}
+		if(red) {
+			style.setFillForegroundColor(HSSFColorPredefined.LIME.getIndex());
+			style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		}
+		style.setDataFormat(wb.createDataFormat().getFormat(sb.toString()));
+		return style;
+	}
 	
     private CellStyle getSumCellStyle(Workbook wb){
     	CellStyle style = wb.createCellStyle();
