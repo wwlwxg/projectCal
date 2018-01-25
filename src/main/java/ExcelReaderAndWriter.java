@@ -22,8 +22,10 @@ import org.apache.poi.hssf.util.HSSFColor.HSSFColorPredefined;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -127,6 +129,8 @@ public class ExcelReaderAndWriter {
 		Sheet sheet = wb.getSheetAt(1);
 		int i = 0;
 		double sum = 0.0;
+		double heSum = 0.0;
+		double wucha = 0.0;
 		for(; i < result.size(); i++) {
 			LaoHuanheBean bean = result.get(i);
 			Row row = sheet.createRow(i + 1);
@@ -142,23 +146,40 @@ public class ExcelReaderAndWriter {
 			
 			int rowNum = row.getRowNum() + 1;
 			row.createCell(9).setCellFormula(bean.getDayRate()[0] + "/360+" + bean.getDayRate()[1] + "/12+" + bean.getDayRate()[2]+"/360");
-			row.createCell(10).setCellFormula("C" + rowNum + "*" + "D" + rowNum + "*" + "(E" + rowNum + "+1)" + "*J" + rowNum + "/100");
+			Cell cell10 = row.createCell(10);
+			cell10.setCellFormula("C" + rowNum + "*" + "D" + rowNum + "*" + "(E" + rowNum + "+1)" + "*J" + rowNum + "/100");
 			Cell cell11 = row.createCell(11);
 			cell11.setCellFormula("K" + rowNum + "-" + "I" + rowNum);
 			if(cell11.getNumericCellValue() >= 0.0001) {
-				cell11.setCellStyle(getNumCellStyle(wb,4,true));
+				cell11.setCellStyle(getNumCellStyle(wb,6,true));
 			} else {
-				cell11.setCellStyle(getNumCellStyle(wb,4,false));
+				cell11.setCellStyle(getNumCellStyle(wb,6,false));
 			}
 			
+			// 核算总合计
+			FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
+			CellValue cellValue = evaluator.evaluate(cell10);
+			heSum += cellValue.getNumberValue();
+			// 总合计
 			sum += bean.getInterest().setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue();
+			
 		}
 		Row rowSum = sheet.createRow(i+1);
+		//总合计
 		Cell zongjiText = rowSum.createCell(0);
 		zongjiText.setCellValue("合计");
 		Cell cellSum = rowSum.createCell(8);
 		cellSum.setCellStyle(getSumCellStyle(wb));
 		cellSum.setCellValue(sum);
+		//核算利息
+		Cell cellHeSum = rowSum.createCell(10);
+		cellHeSum.setCellStyle(getSumCellStyle(wb));
+		cellHeSum.setCellValue(heSum);
+		// 总误差
+		Cell cellWucha = rowSum.createCell(11);
+		cellWucha.setCellStyle(getNumCellStyle(wb, 6, false));
+		cellWucha.setCellFormula("sum(L2:L" + rowSum.getRowNum()+")");
+		
 		sheet.setForceFormulaRecalculation(true); 
 	}
 	
