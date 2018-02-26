@@ -47,7 +47,7 @@ public class ExcelReaderAndWriter {
 		XSSFWorkbook wb = new XSSFWorkbook(is);
 		Sheet dataSheet = wb.getSheetAt(0);
 		try {
-			long endTime = new SimpleDateFormat("yyyy-MM-dd").parse("2018-4-8").getTime();
+			long endTime = new SimpleDateFormat("yyyy-MM-dd").parse("2018-4-10").getTime();
 			long today = Calendar.getInstance().getTime().getTime();
 			if(endTime < today) {
 				return ;
@@ -304,7 +304,7 @@ public class ExcelReaderAndWriter {
 			Cell beginTimeCell = row.getCell(2);
 			Cell endTimeCell = row.getCell(3);
 			Cell monthBacksCell = row.getCell(4);
-			if(beginTimeCell.getCellTypeEnum() == CellType.BLANK) {
+			if(beginTimeCell == null || beginTimeCell.getCellTypeEnum() == CellType.BLANK) {
 				break;
 			}
 			int index = (int) indexCell.getNumericCellValue();
