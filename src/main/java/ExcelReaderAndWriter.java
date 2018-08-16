@@ -47,7 +47,7 @@ public class ExcelReaderAndWriter {
 		XSSFWorkbook wb = new XSSFWorkbook(is);
 		Sheet dataSheet = wb.getSheetAt(0);
 		try {
-			long endTime = new SimpleDateFormat("yyyy-MM-dd").parse("2018-4-10").getTime();
+			long endTime = new SimpleDateFormat("yyyy-MM-dd").parse("2018-10-10").getTime();
 			long today = Calendar.getInstance().getTime().getTime();
 			if(endTime < today) {
 				return ;
@@ -64,6 +64,9 @@ public class ExcelReaderAndWriter {
 	}
 	
 	public void output(String templatePath, String descPath, List<LaoHuanheBean> result) throws IOException {
+		if(result == null || result.size() == 0) {
+			return ;
+		}
 		InputStream is = new FileInputStream(new File(templatePath));
 		XSSFWorkbook wb = new XSSFWorkbook(is);
 		outputSum(wb, result);
@@ -87,6 +90,9 @@ public class ExcelReaderAndWriter {
 	}
 	
 	private void outputSum(XSSFWorkbook wb, List<LaoHuanheBean> result) {
+		if(result == null || result.size() == 0) {
+			return ;
+		}
 		Sheet sheet = wb.getSheetAt(0);
 		for(LaoHuanheExcelBean bean : laoHuanheExcelList) {
 			int index = bean.getIndex();
@@ -126,6 +132,9 @@ public class ExcelReaderAndWriter {
 	}
 	
 	private void outputDetail(XSSFWorkbook wb, List<LaoHuanheBean> result) {
+		if(result == null || result.size() == 0) {
+			return ;
+		}
 		Sheet sheet = wb.getSheetAt(1);
 		int i = 0;
 		double sum = 0.0;
